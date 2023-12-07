@@ -1,31 +1,18 @@
 // JS by Kevin Crowe, 2023
 
-//GOAL: Proportional symbols representing attribute values of mapped features
-//STEPS:
-//Step 1. Create the Leaflet map--already done in createMap()
-//Step 2. Import GeoJSON data--already done in getData()
-//Step 3. Add circle markers for point features to the map--already done in AJAX callback
-//Step 4. Determine the attribute for scaling the proportional symbols
-//Step 5. For each feature, determine its value for the selected attribute
-//Step 6. Give each feature's circle marker a radius based on its attribute value
+/* Lab 1
+ Objectives:
+    - at least 15 locations
+    - at least 7 timestamps
+    - proportional symbols
+    - 5 interaction operators:
+        - pan
+        - zoom
+        - retrieve
+        - sequence
+        - another operator -- perhaps a filter to show which have grown the most by percentage
 
-
-//GOAL 2: Allow the user to sequence through the attributes and resymbolize the map 
-//   according to each attribute
-//STEPS:
-//Step 2.1. Create slider widget
-//Step 2.2. Create step buttons
-//Step 2.3. Create an array of the sequential attributes to keep track of their order
-//Step 2.4. Assign the current attribute based on the index of the attributes array
-//Step 2.5. Listen for user input via affordances
-//Step 2.6. For a forward step through the sequence, increment the attributes array index; 
-//   for a reverse step, decrement the attributes array index
-//Step 2.7. At either end of the sequence, return to the opposite end of the sequence on the next step
-//   (wrap around)
-//Step 2.8. Update the slider position based on the new index
-//Step 2.9. Reassign the current attribute based on the new attributes array index
-//Step 2.10. Resize proportional symbols according to each feature's value for the new attribute
-
+*/
 
 //Set the mapbox key
 L.mapbox.accessToken = 'pk.eyJ1Ijoia2Nyb3dlYmFzc3BybyIsImEiOiJjbG8wZnJwMXgxNW1lMnNwZGF4M295bzhiIn0.HH0mKHddBIow2AdY707JMA';
@@ -44,7 +31,7 @@ function createMap(){
 
     // Tiles are 512x512 pixels and are offset by 1 zoom level
     L.tileLayer(
-        'https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=' + L.mapbox.accessToken, {
+        'https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=' + L.mapbox.accessToken, {
             tileSize: 512,
             zoomOffset: -1,
             attribution: '© <a href="https://www.mapbox.com/contribute/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -85,7 +72,7 @@ function calcPropRadius(attValue) {
     //var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
 
     //I need to take a different approach to calculating a radius
-    radius = attValue/10;
+    radius = attValue/50;
 
     return radius;
 };
@@ -102,11 +89,11 @@ function pointToLayer(feature, latlng, attributes){
 
     //create marker options
     var options = {
-        fillColor: "#ff7800",
+        fillColor: "#33fffc",
         color: "#000",
         weight: 1,
         opacity: 1,
-        fillOpacity: 0.8
+        fillOpacity: 0.7
     };
 
     //For each feature, determine its value for the selected attribute
@@ -119,10 +106,10 @@ function pointToLayer(feature, latlng, attributes){
     var layer = L.circleMarker(latlng, options);
 
     //add formatted attribute to panel content string
-    var decade = attribute.split("temp")[1];
+    var year = attribute.split("rent_")[1];
 
     //build popup content string
-    var popupContent = "<p><b>City:</b> " + feature.properties.city + "</p><p><b>Average number of 90-degree days per year in the " + decade + ":</b> " + feature.properties[attribute] + "</p>";
+    var popupContent = "<p><b>City:</b> " + feature.properties.city + "</p><p><b>Median rent in " + year + ":</b> $" + feature.properties[attribute] + "</p>";
 
     //bind the popup to the circle marker
     layer.bindPopup(popupContent,{
@@ -160,7 +147,7 @@ function updatePropSymbols(attribute){
             var popupContent = "<p><b>City:</b> " + props.city + "</p>";
 
             //add formatted attribute to panel content string
-            var decade = attribute.split("temp")[1];
+            var decade = attribute.split("rent_")[1];
             popupContent += "<p><b>Average number of 90-degree days per year in the " + decade + ":</b> " + props[attribute] + " days</p>";
 
             //update popup content            
@@ -242,7 +229,7 @@ function processData(data){
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with temperature values
-        if (attribute.indexOf("temp") > -1){
+        if (attribute.indexOf("rent_") > -1){
             attributes.push(attribute);
         };
     };
@@ -256,7 +243,7 @@ function processData(data){
 // Step 2: Import the GeoJSON data
 function getData(map){
     //load the data
-    fetch("data/big_city_temps.geojson")
+    fetch("data/big_city_rents_point.geojson")
         .then(function(response){
             return response.json();
         })
