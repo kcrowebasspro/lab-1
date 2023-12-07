@@ -46,41 +46,42 @@ function createMap(){
 };
 
 
-//Calculate the minimum value of the properties
-function calculateMinValue(data){
-    //create empty array to store all data values
-    var allValues = [];
-    //loop through each city
-    for(var city of data.features){
-        //loop through each year
-        for(var year = 1950; year <= 2010; year+=10){
-              //get population for current year
-              var value = city.properties["t" + String(year) + "s"];
-              //add value to array
-              allValues.push(value);
-        }
-    }
-    //get minimum value of our array
-    var minValue = Math.min(...allValues)
-
-    return minValue;
-}
 
 
 //calculate the radius of each proportional symbol
 function calcPropRadius(attValue) {
-    //constant factor adjusts symbol sizes evenly
-    var maxRadius = 15;
+    
+    //There are some small values, so we want to set a floor
+    if(attValue < 4){
+        
+        radius = 2;
 
-    //Flannery Apperance Compensation formula
-    //var radius = 1.0083 * Math.pow(attValue/minValue,0.5715) * minRadius
+    } else {
 
-    //I need to take a different approach to calculating a radius
-    radius = attValue/50;
+    radius = attValue/2;
+
+    }
 
     return radius;
+
 };
 
+//Create a function to change the fill color based on positive or negative change
+function calcFillColor(attValue){
+
+
+    if(attValue < 0){
+        
+        fill_color = "#ff7d33";
+
+    } else {
+
+        fill_color = "#33fffc";
+    }
+
+    return fill_color;
+
+}
 
 //function to convert markers to circle markers
 function pointToLayer(feature, latlng, attributes){
@@ -91,29 +92,33 @@ function pointToLayer(feature, latlng, attributes){
     //check
     console.log(attribute);
 
+
+    //For each feature, determine its value for the selected attribute
+    var attValue = Number(feature.properties[attribute]);
+
     //create marker options
     var options = {
-        fillColor: "#33fffc",
         color: "#000",
         weight: 1,
         opacity: 1,
         fillOpacity: 0.7
     };
 
-    //For each feature, determine its value for the selected attribute
-    var attValue = Number(feature.properties[attribute]);
 
     //Give each feature's circle marker a radius based on its attribute value
     options.radius = calcPropRadius(attValue);
+
+    //Each circle's color based on the direction of change -- positive or negative
+    options.fillColor = calcFillColor(attValue);
 
     //create circle marker layer
     var layer = L.circleMarker(latlng, options);
 
     //add formatted attribute to panel content string
-    var year = attribute.split("rent_")[1];
+    var year = attribute.split("pct_2005_")[1];
 
     //build popup content string
-    var popupContent = "<p><b>City:</b> " + feature.properties.city + "</p><p><b>Median rent in " + year + ":</b> $" + feature.properties[attribute] + "</p>";
+    var popupContent = "<p><b>City:</b> " + feature.properties.city + "</p><p><b>Change in median rent from 2005 to  " + year + ":</b> " + feature.properties[attribute] + "%</p>";
 
     //bind the popup to the circle marker
     layer.bindPopup(popupContent,{
@@ -147,12 +152,16 @@ function updatePropSymbols(attribute){
             var radius = calcPropRadius(props[attribute]);
             layer.setRadius(radius);
 
+            //upate the fill color
+            var fill_color = calcFillColor(props[attribute]);
+            layer.setStyle({fillColor: fill_color});
+
             //add city to popup content string
             var popupContent = "<p><b>City:</b> " + props.city + "</p>";
 
             //add formatted attribute to panel content string
-            var year = attribute.split("rent_")[1];
-            popupContent += "<p><b>Median rent in " + year + ":</b> $" + props[attribute] + "</p>";
+            var year = attribute.split("pct_2005_")[1];
+            popupContent += "<p><b>Change in median rent from 2005 to " + year + ":</b> " + props[attribute] + "%</p>";
 
             //update popup content            
             popup = layer.getPopup();            
@@ -171,14 +180,14 @@ function createSequenceControls(attributes){
     document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
 
     //set slider attributes
-    document.querySelector(".range-slider").max = 8;
+    document.querySelector(".range-slider").max = 7;
     document.querySelector(".range-slider").min = 0;
     document.querySelector(".range-slider").value = 0;
     document.querySelector(".range-slider").step = 1;
 
 
     //add the step buttons
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse">2005</button>');
+    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse">2007</button>');
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward">2022</button>');
 
     //Step 2.5: click listener for buttons
@@ -190,12 +199,12 @@ function createSequenceControls(attributes){
             if (step.id == 'forward'){
                 index++;
                 //Step 2.7: if past the last attribute, wrap around to first attribute
-                index = index > 8 ? 0 : index;
+                index = index > 7 ? 0 : index;
                 console.log(index);
             } else if (step.id == 'reverse'){
                 index--;
                 //Step 2.7: if past the first attribute, wrap around to last attribute
-                index = index < 0 ? 8 : index;
+                index = index < 0 ? 7 : index;
                 console.log(index);
             };
 
@@ -223,7 +232,7 @@ function createSequenceControls(attributes){
 
 
 //Step 2.3: build an attributes array from the data
-function processData(data){
+function processPercents(data){
     //empty array to hold attributes
     var attributes = [];
 
@@ -233,7 +242,7 @@ function processData(data){
     //push each attribute name into attributes array
     for (var attribute in properties){
         //only take attributes with temperature values
-        if (attribute.indexOf("rent_") > -1){
+        if (attribute.indexOf("pct_2005_") > -1){
             attributes.push(attribute);
         };
     };
@@ -254,10 +263,8 @@ function getData(map){
         .then(function(json){
            
             //create an attributes array
-            var attributes = processData(json);
-
-            //calculate minimum data value
-            minValue = calculateMinValue(json);
+            var attributes = processPercents(json);
+            console.log(attributes[0])
 
             //call function to create proportional symbols
             createPropSymbols(json, attributes);
