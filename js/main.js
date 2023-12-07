@@ -12,6 +12,10 @@
         - sequence
         - another operator -- perhaps a filter to show which have grown the most by percentage
 
+Which data to show:
+    - Percent changes and whole dollar changes for 2005-2022
+    - Change the colors of the markers based on whether there was a positive or negative change
+
 */
 
 //Set the mapbox key
@@ -147,8 +151,8 @@ function updatePropSymbols(attribute){
             var popupContent = "<p><b>City:</b> " + props.city + "</p>";
 
             //add formatted attribute to panel content string
-            var decade = attribute.split("rent_")[1];
-            popupContent += "<p><b>Average number of 90-degree days per year in the " + decade + ":</b> " + props[attribute] + " days</p>";
+            var year = attribute.split("rent_")[1];
+            popupContent += "<p><b>Median rent in " + year + ":</b> $" + props[attribute] + "</p>";
 
             //update popup content            
             popup = layer.getPopup();            
@@ -167,15 +171,15 @@ function createSequenceControls(attributes){
     document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
 
     //set slider attributes
-    document.querySelector(".range-slider").max = 6;
+    document.querySelector(".range-slider").max = 8;
     document.querySelector(".range-slider").min = 0;
     document.querySelector(".range-slider").value = 0;
     document.querySelector(".range-slider").step = 1;
 
 
     //add the step buttons
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse">Reverse</button>');
-    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward">Forward</button>');
+    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse">2005</button>');
+    document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward">2022</button>');
 
     //Step 2.5: click listener for buttons
     document.querySelectorAll('.step').forEach(function(step){
@@ -186,12 +190,12 @@ function createSequenceControls(attributes){
             if (step.id == 'forward'){
                 index++;
                 //Step 2.7: if past the last attribute, wrap around to first attribute
-                index = index > 6 ? 0 : index;
+                index = index > 8 ? 0 : index;
                 console.log(index);
             } else if (step.id == 'reverse'){
                 index--;
                 //Step 2.7: if past the first attribute, wrap around to last attribute
-                index = index < 0 ? 6 : index;
+                index = index < 0 ? 8 : index;
                 console.log(index);
             };
 
