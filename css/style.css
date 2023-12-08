@@ -10,7 +10,7 @@
     display: inline-block;
     }
 
-    #panel {    
+#panel {    
         width: 16%;    
         padding: 20px;
         display: inline-block;
@@ -18,7 +18,7 @@
         text-align: center;
         line-height: 42px;
         text-align: center;
-    }
+}
 
  .range-slider {  
     width: 55%;  

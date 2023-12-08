@@ -84,10 +84,12 @@ function calcFillColor(attValue){
 }
 
 //function to convert markers to circle markers
-function pointToLayer(feature, latlng, attributes){
+function pointToLayer(feature, latlng, attributes, medRents, totChanges){
     //Determine which attribute to visualize with proportional symbols
-    //Step 2.4: Assign the current attribute based on the first index of the attributes array
+    //Assign the current attribute based on the first index of the attributes array
     var attribute = attributes[0];
+    var medRent = medRents[0];
+    var totChange = totChanges[0];
 
     //check
     console.log(attribute);
@@ -104,7 +106,6 @@ function pointToLayer(feature, latlng, attributes){
         fillOpacity: 0.7
     };
 
-
     //Give each feature's circle marker a radius based on its attribute value
     options.radius = calcPropRadius(attValue);
 
@@ -118,7 +119,7 @@ function pointToLayer(feature, latlng, attributes){
     var year = attribute.split("pct_2005_")[1];
 
     //build popup content string
-    var popupContent = "<p><b>City:</b> " + feature.properties.city + "</p><p><b>Change in median rent from 2005 to  " + year + ":</b> " + feature.properties[attribute] + "%</p>";
+    var popupContent = "<p><b>City:</b> " + feature.properties.city + "</p><p>Median rent changed by <b>$" + feature.properties[totChange].toLocaleString("en-US") + "</b> to a total of <b>$" +  feature.properties[medRent].toLocaleString("en-US") + "</b> from <b>2005 to " + year + "</b>, a <b>" + feature.properties[attribute] + "%</b> change.</p>";
 
     //bind the popup to the circle marker
     layer.bindPopup(popupContent,{
@@ -131,18 +132,18 @@ function pointToLayer(feature, latlng, attributes){
 };
 
 //Add circle markers for point features to the map
-function createPropSymbols(data, attributes){
+function createPropSymbols(data, attributes, medRents, totChanges){
     //create a Leaflet GeoJSON layer and add it to the map
     L.geoJson(data, {
         pointToLayer: function(feature, latlng){
-            return pointToLayer(feature, latlng, attributes)
+            return pointToLayer(feature, latlng, attributes, medRents, totChanges)
         }
     }).addTo(map);
 };
 
 
-//Step 10: Resize proportional symbols according to new attribute values
-function updatePropSymbols(attribute){
+//Resize proportional symbols according to new attribute values
+function updatePropSymbols(attribute, medRent, totChange){
     map.eachLayer(function(layer){
         if (layer.feature && layer.feature.properties[attribute]){
             //access feature properties
@@ -161,7 +162,7 @@ function updatePropSymbols(attribute){
 
             //add formatted attribute to panel content string
             var year = attribute.split("pct_2005_")[1];
-            popupContent += "<p><b>Change in median rent from 2005 to " + year + ":</b> " + props[attribute] + "%</p>";
+            popupContent += "</p><p>Median rent changed by <b>$" + props[totChange].toLocaleString("en-US") + "</b> to a total of <b>$" +  props[medRent].toLocaleString("en-US") + "</b> from <b>2005 to " + year + "</b>, a <b>" + props[attribute] + "%</b> change.</p>";
 
             //update popup content            
             popup = layer.getPopup();            
@@ -171,10 +172,8 @@ function updatePropSymbols(attribute){
 };
 
 
-
-
-//Step 1: Create new sequence controls
-function createSequenceControls(attributes){
+//Create sequence controls
+function createSequenceControls(attributes, medRents, totChanges){
     //create range input element (slider)
     var slider = "<input class='range-slider' type='range'></input>";
     document.querySelector("#panel").insertAdjacentHTML('beforeend',slider);
@@ -185,17 +184,16 @@ function createSequenceControls(attributes){
     document.querySelector(".range-slider").value = 0;
     document.querySelector(".range-slider").step = 1;
 
-
     //add the step buttons
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="reverse">2007</button>');
     document.querySelector('#panel').insertAdjacentHTML('beforeend','<button class="step" id="forward">2022</button>');
 
-    //Step 2.5: click listener for buttons
+    //Click listener for buttons
     document.querySelectorAll('.step').forEach(function(step){
         step.addEventListener("click", function(){
              var index = document.querySelector('.range-slider').value;
 
-            //Step 2.6: increment or decrement depending on button clicked
+            //Increment or decrement depending on button clicked
             if (step.id == 'forward'){
                 index++;
                 //Step 2.7: if past the last attribute, wrap around to first attribute
@@ -208,23 +206,24 @@ function createSequenceControls(attributes){
                 console.log(index);
             };
 
-            //Step 2.8: update slider
+            //Update slider
             document.querySelector('.range-slider').value = index;
             
-            //Step 2.9: pass new attribute to update symbols
-            updatePropSymbols(attributes[index]);
+            //Pass new attribute to update symbols
+            updatePropSymbols(attributes[index], medRents[index], totChanges[index]);
+
         })
 
     })
 
-    //Step 2.5: input listener for slider
+    //Input listener for slider
     document.querySelector('.range-slider').addEventListener('input', function(){
         //Step 2.6: get the new index value
         var index = this.value;
         console.log(index)            
         
-        //Step 2.9: pass new attribute to update symbols
-        updatePropSymbols(attributes[index]);
+        //Pass new attribute to update symbols
+        updatePropSymbols(attributes[index], medRents[index], totChanges[index]);
 
     });
 };
@@ -265,7 +264,7 @@ function processRents(data){
     //properties of the first feature in the dataset
     var properties = data.features[0].properties;
 
-    //push each attribute name into attributes array
+    //push each attribute name into rents array
     for (var attribute in properties){
         
         //only take attributes with median rent values
@@ -292,7 +291,7 @@ function processChanges(data){
     //properties of the first feature in the dataset
     var properties = data.features[0].properties;
 
-    //push each attribute name into attributes array
+    //push each attribute name into total changes array
     for (var attribute in properties){
         
         //take the attributes with total in the name
@@ -308,7 +307,6 @@ function processChanges(data){
 
     return totChanges;
 };
-
 
 
 //Import the GeoJSON data
@@ -330,10 +328,9 @@ function getData(map){
             var medRents = processRents(json);
 
             //call function to create proportional symbols
-            createPropSymbols(json, attributes);
-            createSequenceControls(attributes);
+            createPropSymbols(json, attributes, medRents, totChanges);
+            createSequenceControls(attributes, medRents, totChanges);
         })
 };
-
 
 document.addEventListener('DOMContentLoaded',createMap)
