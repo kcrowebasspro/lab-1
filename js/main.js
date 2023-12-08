@@ -52,9 +52,9 @@ function createMap(){
 function calcPropRadius(attValue) {
     
     //There are some small values, so we want to set a floor
-    if(attValue < 4){
+    if(attValue < 6){
         
-        radius = 2;
+        radius = 3;
 
     } else {
 
