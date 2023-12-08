@@ -41,8 +41,12 @@ function createMap(){
             attribution: '© <a href="https://www.mapbox.com/contribute/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
+    // add search box
+    L.Control.geocoder().addTo(map);
+
     //call getData function
     getData(map);
+
 };
 
 
@@ -228,6 +232,39 @@ function createSequenceControls(attributes, medRents, totChanges){
     });
 };
 
+/*
+//Add data for searchlayer
+const searchLayer = L.geoJSON(testData,{
+
+    onEachFeature: function(feature, layer){
+        layer.bindPopup(feature.properties.city);
+    }
+}).addTo(map);
+
+
+// Add control search
+const searchControl = new L.Control.Search({
+    layer: json,
+    propertyName: 'city'
+});
+
+map.addControl(searchControl);
+
+var testData = new Request("data/big_city_rents_point.geojson");
+
+rentsLayer = new L.geoJson(testData).addTo(map);
+
+var controlSearch = new L.Control.Search({
+    position:'topright',        
+    layer: rentsLayer,
+    propertyName: 'city',
+    initial: false,
+    zoom: 11,
+    marker: false,
+}); 
+map.addControl(controlSearch);
+*/
+
 
 //Build an attributes array from the data containg the percent changes
 function processPercents(data){
@@ -309,6 +346,19 @@ function processChanges(data){
 };
 
 
+/*
+
+//testing the creation of the variable
+var testData = fetch("data/big_city_rents_point.geojson")
+        .then(function(response){
+            return response.json();
+        });
+
+console.log(testData);
+*/
+
+
+
 //Import the GeoJSON data
 function getData(map){
     //load the data
@@ -330,7 +380,13 @@ function getData(map){
             //call function to create proportional symbols
             createPropSymbols(json, attributes, medRents, totChanges);
             createSequenceControls(attributes, medRents, totChanges);
+
         })
+
 };
+
+
+
+
 
 document.addEventListener('DOMContentLoaded',createMap)
