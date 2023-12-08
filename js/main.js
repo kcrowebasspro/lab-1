@@ -232,39 +232,6 @@ function createSequenceControls(attributes, medRents, totChanges){
     });
 };
 
-/*
-//Add data for searchlayer
-const searchLayer = L.geoJSON(testData,{
-
-    onEachFeature: function(feature, layer){
-        layer.bindPopup(feature.properties.city);
-    }
-}).addTo(map);
-
-
-// Add control search
-const searchControl = new L.Control.Search({
-    layer: json,
-    propertyName: 'city'
-});
-
-map.addControl(searchControl);
-
-var testData = new Request("data/big_city_rents_point.geojson");
-
-rentsLayer = new L.geoJson(testData).addTo(map);
-
-var controlSearch = new L.Control.Search({
-    position:'topright',        
-    layer: rentsLayer,
-    propertyName: 'city',
-    initial: false,
-    zoom: 11,
-    marker: false,
-}); 
-map.addControl(controlSearch);
-*/
-
 
 //Build an attributes array from the data containg the percent changes
 function processPercents(data){
@@ -384,9 +351,6 @@ function getData(map){
         })
 
 };
-
-
-
 
 
 document.addEventListener('DOMContentLoaded',createMap)
