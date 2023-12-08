@@ -230,20 +230,22 @@ function createSequenceControls(attributes){
 };
 
 
-
-//Step 2.3: build an attributes array from the data
+//Build an attributes array from the data containg the percent changes
 function processPercents(data){
-    //empty array to hold attributes
-    var attributes = [];
+    //empty arrays to hold the different chunks of data
+    var attributes = []; //percent changes
 
     //properties of the first feature in the dataset
     var properties = data.features[0].properties;
 
     //push each attribute name into attributes array
     for (var attribute in properties){
-        //only take attributes with temperature values
+
+        //only take attributes with percent change values
         if (attribute.indexOf("pct_2005_") > -1){
+
             attributes.push(attribute);
+
         };
     };
 
@@ -253,7 +255,63 @@ function processPercents(data){
     return attributes;
 };
 
-// Step 2: Import the GeoJSON data
+
+//Function to process the median rents for each period
+function processRents(data){
+
+    //empty arrays to hold the different chunks of data
+    var medRents = []; //median rents
+
+    //properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    //push each attribute name into attributes array
+    for (var attribute in properties){
+        
+        //only take attributes with median rent values
+        if (attribute.indexOf("rent_") > -1) {
+
+            medRents.push(attribute);
+
+        };
+    };
+
+    //check result
+    console.log(medRents);
+
+    return medRents;
+};
+
+
+//Function to process the total changes for each period 
+//compared to 2005
+function processChanges(data){
+    //empty arrays to hold the different chunks of data
+    var totChanges = []; //the actual dollar changes
+
+    //properties of the first feature in the dataset
+    var properties = data.features[0].properties;
+
+    //push each attribute name into attributes array
+    for (var attribute in properties){
+        
+        //take the attributes with total in the name
+        if (attribute.indexOf("tot_2005_") > -1) {
+
+            totChanges.push(attribute);    
+
+        };
+    };
+
+    //check result
+    console.log(totChanges);
+
+    return totChanges;
+};
+
+
+
+//Import the GeoJSON data
 function getData(map){
     //load the data
     fetch("data/big_city_rents_point.geojson")
@@ -264,7 +322,12 @@ function getData(map){
            
             //create an attributes array
             var attributes = processPercents(json);
-            console.log(attributes[0])
+
+            //create the total changes array
+            var totChanges = processChanges(json);
+
+            //create array to hold the median rents
+            var medRents = processRents(json);
 
             //call function to create proportional symbols
             createPropSymbols(json, attributes);
