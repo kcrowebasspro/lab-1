@@ -44,12 +44,16 @@
         float: left;  
     }
 
-    .legend-control-container {  
-        width: 100px;  
-        height: 25px;  
-        background-color: rgba(255,255,255,0.8);  
-        padding: 10px;  
-        line-height: 45px;  
-        text-align: center;  
-        border: solid gray 1px;  
-    } 
+    .legend-control-container {
+        width: 125px;
+        height: 75px;
+        font-weight: bold;
+        background-color: rgba(255,255,255,0.8);
+        padding: 10px;
+        text-align: center;
+        border: solid gray 1px;
+    }
+    
+    .legend-control-container p{
+         margin: 0;
+    }

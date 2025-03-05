@@ -82,6 +82,62 @@ function PopupContent(properties, attribute){
     this.formatted = "<p><b>ZIP Code:</b> " + this.properties.zipCode + "</p><p><b>Rent in month " + this.month + ":</b> $" + this.rent + "</p>";
 };
 
+function getCircleValues(attribute) {
+    //start with min at highest possible and max at lowest possible number
+    var min = Infinity,
+      max = -Infinity;
+  
+    map.eachLayer(function (layer) {
+      //get the attribute value
+      if (layer.feature) {
+        var attributeValue = Number(layer.feature.properties[attribute]);
+  
+        //test for min
+        if (attributeValue < min) {
+          min = attributeValue;
+        }
+  
+        //test for max
+        if (attributeValue > max) {
+          max = attributeValue;
+        }
+      }
+    });
+  
+    //set mean
+    var mean = (max + min) / 2;
+  
+    //return values as an object
+    return {
+      max: max,
+      mean: mean,
+      min: min,
+    };
+  }
+
+function updateLegend(attribute) {
+    //create content for legend
+    var month = attribute.split("month_")[1];
+    //replace legend content
+    document.querySelector("span").innerHTML = month;
+  
+    //get the max, mean, and min values as an object
+    var circleValues = getCircleValues(attribute);
+  
+    for (var key in circleValues) {
+      //get the radius
+      var radius = calcPropRadius(circleValues[key]);
+  
+      document.querySelector("#" + key).setAttribute("cy", 59 - radius);
+      document.querySelector("#" + key).setAttribute("r", radius)
+  
+      document.querySelector("#" + key + "-text").textContent = " $" + Math.round(circleValues[key] * 100) / 100;
+  
+    }
+  }
+
+
+
 // legend content constructor function
 function LegendContent(attribute){
     this.attribute = attribute;
@@ -136,6 +192,7 @@ function createPropSymbols(data, attributes){
 
 // Create a legend
 function createLegend(attributes){
+    console.log("Check this out");
     var LegendControl = L.Control.extend({
         options: {
             position: 'bottomright'
@@ -154,27 +211,52 @@ function createLegend(attributes){
             //array of circle names to base loop on
             var circles = ["max", "mean", "min"];
 
-            //Step 2: loop to add each circle and text to svg string
-            for (var i=0; i<circles.length; i++){
+              //Step 2: loop to add each circle and text to svg string
+      for (var i = 0; i < circles.length; i++) {
+        //calculate r and cy
+        var radius = calcPropRadius(dataStats[circles[i]]);
+        console.log(radius);
+        var cy = 59 - radius;
+        console.log(cy);
 
-                // assign the r and cy attributes  
-                var radius = calcPropRadius(dataStats[circles[i]]);  
-                var cy = 130 - radius;  
+        //circle string
+        svg +=
+          '<circle class="legend-circle" id="' +
+          circles[i] +
+          '" r="' +
+          radius +
+          '"cy="' +
+          cy +
+          '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="30"/>';
 
-                //circle string  
-                svg += '<circle class="legend-circle" id="' + circles[i] + '" r="' + radius + '"cy="' + cy + '" fill="#F47821" fill-opacity="0.8" stroke="#000000" cx="65"/>'; 
-            };
+        //evenly space out labels
+        var textY = i * 20 + 20;
+
+        //text string
+        svg +=
+          '<text id="' +
+          circles[i] +
+          '-text" x="65" y="' +
+          textY +
+          '">' +
+          " $" +
+          Math.round(dataStats[circles[i]] * 100) / 100 +
+          "</text>";
+      }
 
             //close svg string
             svg += "</svg>";
 
             //add attribute legend svg to container
             container.insertAdjacentHTML('beforeend',svg);
+             
+            console.log(svg);
+
 
             //add attribute legend svg to container
             //container.innerHTML += svg;
 
-            //PUT YOUR SCRIPT TO CREATE THE TEMPORAL LEGEND HERE
+            console.log(container);
 
             return container;
         }
@@ -208,7 +290,8 @@ function updatePropSymbols(attribute){
 
         // update the legend content
         var legendContent = new LegendContent(attribute);
-        document.querySelector(".temporalLegend").innerHTML = legendContent.formatted;       
+        document.querySelector(".temporalLegend").innerHTML = legendContent.formatted;   
+        updateLegend(attribute);    
 
 
         };
